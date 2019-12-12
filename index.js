@@ -11,7 +11,7 @@ const INTERNAL_ERROR_CODE = 1011
 const INTERNAL_ERROR_REASON = 'stream error'
 
 module.exports = class WebSocketJSONStream extends Duplex {
-    constructor(ws) {
+    constructor(ws, encoder) {
         super({
             objectMode: true,
             allowHalfOpen: false,
@@ -20,12 +20,14 @@ module.exports = class WebSocketJSONStream extends Duplex {
 
         this._emittedClose = false
         this.ws = ws;
+        this._encodeData = encoder ? encoder.encode : JSON.stringify
+        this._decodeData = encoder ? encoder.decode : JSON.parse
 
         this.ws.addEventListener('message', ({ data }) => {
             let value
 
             try {
-                value = JSON.parse(data)
+                value = this._decodeData(data)
             } catch (error) {
                 return this.destroy(error)
             }
@@ -45,19 +47,19 @@ module.exports = class WebSocketJSONStream extends Duplex {
     _read() {}
 
     _write(object, encoding, callback) {
-        let json
+        let encoded
 
         try {
-            json = JSON.stringify(object)
+            encoded = this._encodeData(object)
         } catch (error) {
             return callback(error)
         }
 
-        if (typeof json !== 'string') {
-            return callback(new Error('Can\'t JSON.stringify the value'))
+        if (typeof encoded === 'undefined') {
+            return callback(new Error('Can\'t encode the value'))
         }
 
-        this._send(json, callback)
+        this._send(encoded, callback)
     }
 
     _send(json, callback) {

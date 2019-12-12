@@ -61,6 +61,27 @@ describe('WebSocketJSONStream', function () {
         this.clientStream.end()
     })
 
+    it('should send and receive messages with custom serialization', function (done) {
+        this.clientStream._encodeData = this.serverStream._encodeData = (data) => data.join('|')
+        this.clientStream._decodeData = this.serverStream._decodeData = (data) => data.split('|')
+
+        const serverSentData = [ ['a', 'b', 'c'], ['g', 'h', 'i'] ]
+        const clientSentData = [ ['d', 'e', 'f'], ['j', 'k', 'l'] ]
+        const serverReceivedData = []
+        const clientReceivedData = []
+
+        this.serverStream.on('data', data => serverReceivedData.push(data))
+        this.clientStream.on('data', data => clientReceivedData.push(data))
+        this.clientStream.on('close', handler(done, () => {
+            assert.deepEqual(serverReceivedData, clientSentData)
+            assert.deepEqual(clientReceivedData, serverSentData)
+        }))
+
+        serverSentData.forEach(data => this.serverStream.write(data))
+        clientSentData.forEach(data => this.clientStream.write(data))
+        this.clientStream.end()
+    })
+
     it('should get clientStream close on clientStream.end()', function (done) {
         this.clientStream.on('close', () => done())
         this.clientStream.end()

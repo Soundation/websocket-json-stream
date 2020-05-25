@@ -3,6 +3,7 @@
   "version": "2.1.0",
   "description": "Expose WebSockets with JSON as an object stream.",
   "main": "index.js",
+  "types": "types.d.ts",
   "scripts": {
     "test": "mocha",
     "test:watch": "mocha -w",
@@ -20,6 +21,8 @@
   },
   "license": "MIT",
   "devDependencies": {
+    "@types/node": "^14.0.5",
+    "@types/ws": "^6.0.1",
     "chai": "^4.2.0",
     "coveralls": "^3.0.2",
     "eslint": "^4.19.1",
